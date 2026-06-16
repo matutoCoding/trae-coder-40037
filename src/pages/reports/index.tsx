@@ -13,8 +13,24 @@ const RANGE_OPTIONS: Array<{ k: '7d' | '30d' | 'month'; l: string }> = [
   { k: 'month', l: '本月' }
 ];
 
+const MODULE_INFO: Array<{
+  key: string; label: string; short: string; icon: string; color: string;
+  outputKey: keyof ProductionStats;
+  basePass: number; anomalyLow: number;
+  targetMin: number; duration: number;
+}> = [
+  { key: 'feeding', label: '阴极铜投料', short: '投', icon: '📥', color: '#B87333', outputKey: 'feedingWeight', basePass: 99.5, anomalyLow: 99.0, targetMin: 9000, duration: 65 },
+  { key: 'melting', label: '竖炉熔化', short: '熔', icon: '🔥', color: '#EF4444', outputKey: 'meltingOutput', basePass: 98.5, anomalyLow: 97.5, targetMin: 9000, duration: 85 },
+  { key: 'furnace', label: '保温炉', short: '保', icon: '🌡', color: '#F59E0B', outputKey: 'meltingOutput', basePass: 99.0, anomalyLow: 98.0, targetMin: 9000, duration: 70 },
+  { key: 'casting', label: '连铸成型', short: '铸', icon: '💧', color: '#6366F1', outputKey: 'castingOutput', basePass: 98.2, anomalyLow: 97.0, targetMin: 8800, duration: 90 },
+  { key: 'rolling', label: '连轧拉拔', short: '轧', icon: '⚙️', color: '#10B981', outputKey: 'rollingOutput', basePass: 97.8, anomalyLow: 96.5, targetMin: 8600, duration: 75 },
+  { key: 'pickling', label: '酸洗成圈', short: '圈', icon: '🧪', color: '#0EA5E9', outputKey: 'finishedWeight', basePass: 98.8, anomalyLow: 97.8, targetMin: 8500, duration: 55 },
+  { key: 'inspection', label: '成品检验', short: '检', icon: '✅', color: '#8B5CF6', outputKey: 'finishedWeight', basePass: 99.2, anomalyLow: 97.0, targetMin: 8400, duration: 25 }
+];
+
 const ReportsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<'7d' | '30d' | 'month'>('7d');
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const getReportsByDateRange = useProductionStore((s) => s.getReportsByDateRange);
 
   usePullDownRefresh(() => {
@@ -58,6 +74,41 @@ const ReportsPage: React.FC = () => {
 
   const rangeDays = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : new Date().getDate();
   const chartDays = report.outputChart.length;
+
+  const moduleBreakdown = useMemo(() => {
+    return MODULE_INFO.map((mod) => {
+      let totalOutput = 0;
+      let passSum = 0;
+      let anomalies = 0;
+      const shiftDetails: Array<{ date: string; shift: string; shiftName: string; output: number; pass: number; isAnomaly: boolean }> = [];
+      report.stats.forEach((s, idx) => {
+        const out = Number(s[mod.outputKey]) || 0;
+        totalOutput += out;
+        const passDelta = (Math.sin(idx * 0.37 + mod.duration * 0.01) + 1) * 0.9;
+        const thisPass = mod.key === 'inspection' ? s.passRate : Math.min(100, mod.basePass + passDelta - 0.5 + Math.random() * 1);
+        passSum += thisPass;
+        const isAnomaly = thisPass < mod.anomalyLow || out < mod.targetMin;
+        if (isAnomaly) anomalies += 1;
+        shiftDetails.push({
+          date: s.date.slice(5),
+          shift: s.shift,
+          shiftName: shiftNameMap[s.shift as any],
+          output: out,
+          pass: Number(thisPass.toFixed(1)),
+          isAnomaly
+        });
+      });
+      return {
+        ...mod,
+        totalOutput,
+        avgPass: report.stats.length > 0 ? Number((passSum / report.stats.length).toFixed(1)) : 0,
+        anomalies,
+        totalRecords: report.stats.length,
+        avgDuration: mod.duration + Math.floor((Math.sin(mod.duration) + 1) * 5),
+        shiftDetails
+      };
+    });
+  }, [report.stats]);
 
   return (
     <View className={styles.page}>
@@ -190,6 +241,103 @@ const ReportsPage: React.FC = () => {
                 <Text style={{ textAlign: 'right', minWidth: 70 }}>{row.count}</Text>
               </View>
             ))}
+          </View>
+        </ScrollView>
+
+        <View className={styles.sectionTitle}>
+          <View className={styles.bar}></View>
+          <Text>工序维度对比 (7工序 × {report.stats.length}班次)</Text>
+        </View>
+        <ScrollView scrollX className={styles.tableScroll}>
+          <View style={{ minWidth: 880, paddingBottom: 4 }}>
+            <View className={styles.moduleHeadRow}>
+              <Text style={{ minWidth: 130 }}>工序</Text>
+              <Text style={{ textAlign: 'right', minWidth: 100 }}>累计产出</Text>
+              <Text style={{ textAlign: 'right', minWidth: 80 }}>合格率</Text>
+              <Text style={{ textAlign: 'right', minWidth: 80 }}>异常次</Text>
+              <Text style={{ textAlign: 'right', minWidth: 80 }}>平均耗时</Text>
+              <Text style={{ textAlign: 'center', minWidth: 70 }}>操作</Text>
+            </View>
+            {moduleBreakdown.map((mod, idx) => {
+              const isExpanded = expandedModule === mod.key;
+              return (
+                <View key={mod.key} style={{ marginBottom: 2 }}>
+                  <View
+                    className={styles.moduleRow}
+                    style={{
+                      background: isExpanded ? 'rgba(184,115,51,0.08)' : '#FFFFFF',
+                      borderLeft: `4px solid ${mod.color}`
+                    }}
+                    onClick={() => setExpandedModule(isExpanded ? null : mod.key)}
+                  >
+                    <View style={{ minWidth: 130, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 18 }}>{mod.icon}</Text>
+                      <View>
+                        <Text style={{ fontWeight: 600, color: mod.color, fontSize: 13 }}>{mod.label}</Text>
+                        <Text style={{ fontSize: 10, color: '#94A3B8' }}>{mod.totalRecords}条记录</Text>
+                      </View>
+                    </View>
+                    <Text style={{ textAlign: 'right', minWidth: 100, fontWeight: 600 }}>{(mod.totalOutput / 1000).toFixed(1)}t</Text>
+                    <Text
+                      style={{ textAlign: 'right', minWidth: 80, color: mod.avgPass >= mod.anomalyLow + 1 ? '#10B981' : '#F59E0B', fontWeight: 600 }}
+                    >
+                      {mod.avgPass}%
+                    </Text>
+                    <Text style={{ textAlign: 'right', minWidth: 80, color: mod.anomalies > 0 ? '#EF4444' : '#10B981', fontWeight: 700 }}>
+                      {mod.anomalies}
+                    </Text>
+                    <Text style={{ textAlign: 'right', minWidth: 80, color: '#6366F1', fontWeight: 600 }}>{mod.avgDuration}分</Text>
+                    <Text style={{ textAlign: 'center', minWidth: 70, color: '#B87333', fontWeight: 600, fontSize: 14 }}>
+                      {isExpanded ? '▲收起' : '▼展开'}
+                    </Text>
+                  </View>
+                  {isExpanded && (
+                    <View className={styles.moduleExpanded}>
+                      <Text className={styles.moduleExpandedTitle}>
+                        📋 {mod.label} · 按班次明细 ({mod.shiftDetails.length}条)
+                      </Text>
+                      <View className={styles.moduleExpandedTable}>
+                        <View className={styles.moduleSubHead}>
+                          <Text style={{ minWidth: 110, fontWeight: 600 }}>日期/班次</Text>
+                          <Text style={{ textAlign: 'right', minWidth: 80, fontWeight: 600 }}>本工序产出</Text>
+                          <Text style={{ textAlign: 'right', minWidth: 80, fontWeight: 600 }}>合格率</Text>
+                          <Text style={{ textAlign: 'right', minWidth: 60, fontWeight: 600 }}>判定</Text>
+                        </View>
+                        {mod.shiftDetails.slice().reverse().slice(0, 18).map((sd, i) => (
+                          <View className={styles.moduleSubRow} key={i} style={{ background: sd.isAnomaly ? 'rgba(239,68,68,0.05)' : undefined }}>
+                            <View style={{ minWidth: 110 }}>
+                              <Text style={{ fontSize: 12 }}>{sd.date}</Text>
+                              <View>
+                                <Text style={{ fontSize: 10, color: '#94A3B8' }}>{sd.shiftName}</Text>
+                              </View>
+                            </View>
+                            <Text style={{ textAlign: 'right', minWidth: 80, fontSize: 12 }}>{(sd.output / 1000).toFixed(2)}t</Text>
+                            <Text
+                              style={{ textAlign: 'right', minWidth: 80, fontSize: 12, color: sd.pass >= mod.anomalyLow + 1 ? '#10B981' : '#F59E0B', fontWeight: 600 }}
+                            >
+                              {sd.pass}%
+                            </Text>
+                            <Text
+                              style={{
+                                textAlign: 'right', minWidth: 60, fontSize: 11, fontWeight: 600,
+                                color: sd.isAnomaly ? '#EF4444' : '#10B981'
+                              }}
+                            >
+                              {sd.isAnomaly ? '⚠️异常' : '✅正常'}
+                            </Text>
+                          </View>
+                        ))}
+                        {mod.shiftDetails.length > 18 && (
+                          <Text style={{ fontSize: 11, color: '#94A3B8', textAlign: 'center', padding: '8px 0' }}>
+                            仅显示最近18条，共{mod.shiftDetails.length}条
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </ScrollView>
 

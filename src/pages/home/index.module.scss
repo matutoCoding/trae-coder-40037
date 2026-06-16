@@ -330,3 +330,34 @@
   color: $color-text-tertiary;
   font-size: $font-size-sm;
 }
+
+.anomalyBox {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.anomalyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx dashed $color-divider;
+  &:last-child {
+    border-bottom: none;
+  }
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.emptyAnomaly {
+  padding: $spacing-lg;
+  text-align: center;
+  background: rgba(16, 185, 129, 0.04);
+  border-radius: $radius-md;
+  border: 1rpx solid rgba(16, 185, 129, 0.2);
+}

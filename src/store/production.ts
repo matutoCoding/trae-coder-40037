@@ -165,16 +165,17 @@ const refreshBatchNos = (state: { records: RecordsByKey }): string[] => {
 const generateExtendedStats = (baseStats: ProductionStats[], days: number): ProductionStats[] => {
   const result: ProductionStats[] = [];
   const today = new Date('2026-06-17');
+  const shifts: Array<'morning' | 'afternoon' | 'night'> = ['morning', 'afternoon', 'night'];
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const existing = baseStats.filter((s) => s.date === dateStr);
-    if (existing.length > 0) {
-      result.push(...existing);
-    } else {
-      const shifts: Array<'morning' | 'afternoon' | 'night'> = ['morning', 'afternoon', 'night'];
-      shifts.forEach((shift, idx) => {
+    shifts.forEach((shift, idx) => {
+      const found = existing.find((e) => e.shift === shift);
+      if (found) {
+        result.push(found);
+      } else {
         const factor = 0.95 + Math.random() * 0.1;
         const baseFeed = 10000 + Math.floor(Math.random() * 3000);
         const feed = Math.floor(baseFeed * factor);
@@ -190,9 +191,9 @@ const generateExtendedStats = (baseStats: ProductionStats[], days: number): Prod
           passRate: Number(pass.toFixed(1)),
           runningHours: Number((7.0 + Math.random() * 1.2).toFixed(1))
         });
-        void idx;
-      });
-    }
+      }
+      void idx;
+    });
   }
   return result;
 };
@@ -519,22 +520,18 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
 
   getReportsByDateRange: (range) => {
     const state = get();
-    let stats: ProductionStats[] = [];
-    if (range === '7d') {
-      stats = generateExtendedStats(state.productionStats, 7);
-    } else if (range === '30d') {
-      stats = generateExtendedStats(state.productionStats, 30);
-    } else {
-      stats = generateExtendedStats(state.productionStats, new Date().getDate());
-    }
-    const totalOutput = stats.reduce((s, r) => s + r.finishedWeight, 0);
-    const totalFeed = stats.reduce((s, r) => s + r.feedingWeight, 0);
-    const totalHours = stats.reduce((s, r) => s + r.runningHours, 0);
-    const avgPassRate = stats.length > 0 ? stats.reduce((s, r) => s + r.passRate, 0) / stats.length : 0;
+    const days = range === '7d' ? 7 : range === '30d' ? 30 : new Date().getDate();
+    const stats = generateExtendedStats(state.productionStats, days);
+    const sliceCount = days * 3;
+    const clippedStats = stats.slice(-sliceCount);
+    const totalOutput = clippedStats.reduce((s, r) => s + r.finishedWeight, 0);
+    const totalFeed = clippedStats.reduce((s, r) => s + r.feedingWeight, 0);
+    const totalHours = clippedStats.reduce((s, r) => s + r.runningHours, 0);
+    const avgPassRate = clippedStats.length > 0 ? clippedStats.reduce((s, r) => s + r.passRate, 0) / clippedStats.length : 0;
     return {
-      stats: stats.slice(-range === '7d' ? 21 : range === '30d' ? 90 : new Date().getDate() * 3),
-      outputChart: generateChartFromStats(stats, 'output', range),
-      passRateChart: generateChartFromStats(stats, 'passRate', range),
+      stats: clippedStats,
+      outputChart: generateChartFromStats(clippedStats, 'output', range),
+      passRateChart: generateChartFromStats(clippedStats, 'passRate', range),
       summary: {
         totalOutput,
         avgPassRate: Number(avgPassRate.toFixed(1)),

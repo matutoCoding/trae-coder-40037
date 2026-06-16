@@ -308,6 +308,32 @@
   }
 }
 
+.deviationCard {
+  margin: $spacing-md $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .title {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.deviationHeader {
+  margin-bottom: $spacing-md;
+}
+
+.deviationItem {
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-xs;
+}
+
 .empty {
   margin: 80rpx $page-padding;
   background: $color-bg-card;

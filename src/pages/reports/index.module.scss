@@ -177,3 +177,75 @@
   color: $color-text-tertiary;
   font-size: $font-size-sm;
 }
+
+.moduleHeadRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md $radius-md 0 0;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-semibold;
+  border-bottom: 2rpx solid $color-divider;
+}
+
+.moduleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: #FFFFFF;
+  border-radius: $radius-md;
+  border-bottom: 1rpx solid $color-divider;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.995);
+  }
+}
+
+.moduleExpanded {
+  margin: 8rpx 0 16rpx;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  overflow: hidden;
+  border: 1rpx solid $color-border;
+}
+
+.moduleExpandedTitle {
+  display: block;
+  padding: $spacing-sm $spacing-md;
+  background: linear-gradient(135deg, rgba(184,115,51,0.12) 0%, rgba(184,115,51,0.04) 100%);
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.moduleExpandedTable {
+  padding: 0;
+}
+
+.moduleSubHead, .moduleSubRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 8rpx $spacing-md;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  border-bottom: 1rpx dashed $color-divider;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.moduleSubHead {
+  background: rgba(248,250,252,0.6);
+}

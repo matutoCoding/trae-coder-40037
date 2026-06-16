@@ -70,6 +70,67 @@ const HomePage: React.FC = () => {
   const pendingAlertCount = alerts.filter((a) => !a.isHandled).length;
   const handledAlertCount = alerts.filter((a) => a.isHandled).length;
 
+  type AnomalySource = { key: string; label: string; icon: string; color: string; count: number; target: string; batches: string[] };
+  const anomalySources = useMemo((): AnomalySource[] => {
+    const list: AnomalySource[] = [
+      {
+        key: 'furnace', label: '保温炉液位低', icon: '🌡', color: '#F59E0B', target: 'furnace', count: 0, batches: []
+      },
+      {
+        key: 'acid', label: '酸洗浓度低', icon: '🧪', color: '#0EA5E9', target: 'pickling', count: 0, batches: []
+      },
+      {
+        key: 'diameter', label: '直径偏差大', icon: '📏', color: '#10B981', target: 'rolling', count: 0, batches: []
+      },
+      {
+        key: 'inspection', label: '检验不合格/关注', icon: '✅', color: '#8B5CF6', target: 'inspection', count: 0, batches: []
+      },
+      {
+        key: 'melting', label: '熔化温度低', icon: '🔥', color: '#EF4444', target: 'melting', count: 0, batches: []
+      },
+      {
+        key: 'speed', label: '浇铸速度低', icon: '💧', color: '#6366F1', target: 'casting', count: 0, batches: []
+      }
+    ];
+    records.furnace.filter((r) => r.createTime.startsWith(today) && r.liquidLevel < 75).forEach((r) => {
+      list[0].count += 1;
+      if (!list[0].batches.includes(r.batchNo)) list[0].batches.push(r.batchNo);
+    });
+    records.pickling.filter((r) => r.createTime.startsWith(today) && r.acidConcentration < 12.0).forEach((r) => {
+      list[1].count += 1;
+      if (!list[1].batches.includes(r.batchNo)) list[1].batches.push(r.batchNo);
+    });
+    records.rolling.filter((r) => r.createTime.startsWith(today) && Math.abs(r.diameterTolerance) > 0.03).forEach((r) => {
+      list[2].count += 1;
+      if (!list[2].batches.includes(r.batchNo)) list[2].batches.push(r.batchNo);
+    });
+    records.inspection.filter((r) => r.createTime.startsWith(today) && r.overallResult !== 'pass').forEach((r) => {
+      list[3].count += 1;
+      if (!list[3].batches.includes(r.batchNo)) list[3].batches.push(r.batchNo);
+    });
+    records.melting.filter((r) => r.createTime.startsWith(today) && r.meltingTemp < 1170).forEach((r) => {
+      list[4].count += 1;
+      if (!list[4].batches.includes(r.batchNo)) list[4].batches.push(r.batchNo);
+    });
+    records.casting.filter((r) => r.createTime.startsWith(today) && r.castingWheelSpeed < 3.0).forEach((r) => {
+      list[5].count += 1;
+      if (!list[5].batches.includes(r.batchNo)) list[5].batches.push(r.batchNo);
+    });
+    return list;
+  }, [records, today]);
+
+  const totalAnomalyCount = anomalySources.reduce((s, a) => s + a.count, 0);
+  const maxAnomalyCount = Math.max(1, ...anomalySources.map((a) => a.count));
+
+  const handleAnomalyClick = (src: AnomalySource) => {
+    if (src.batches.length > 0) {
+      const firstBatch = src.batches[0];
+      Taro.navigateTo({ url: `/pages/batch-trace/index?batch=${firstBatch}` });
+    } else {
+      handleQuickAction(src.target);
+    }
+  };
+
   const handleQuickAction = (action: string) => {
     const pageMap: Record<string, string> = {
       feeding: '/pages/feeding-detail/index',
@@ -234,6 +295,69 @@ const HomePage: React.FC = () => {
           type="bar"
           color="copper"
         />
+
+        <View className={styles.sectionHeader}>
+          <View className={styles.title}>
+            <View className={styles.bar}></View>
+            <Text>今日异常来源分布 · {totalAnomalyCount}项</Text>
+          </View>
+          <Text
+            className={styles.more}
+            onClick={() => handleQuickAction('trace')}
+          >
+            批次追踪 →
+          </Text>
+        </View>
+        <View className={styles.anomalyBox}>
+          {totalAnomalyCount === 0 ? (
+            <View className={styles.emptyAnomaly}>
+              <Text style={{ fontSize: 28 }}>✅</Text>
+              <Text style={{ fontSize: 13, color: '#10B981', fontWeight: 600, marginTop: 6 }}>今日暂无关键参数异常</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>所有工序运行稳定，请继续保持</Text>
+            </View>
+          ) : (
+            anomalySources.map((src) => {
+              const percent = (src.count / maxAnomalyCount) * 100;
+              return (
+                <View
+                  key={src.key}
+                  className={styles.anomalyRow}
+                  onClick={() => handleAnomalyClick(src)}
+                >
+                  <View style={{ display: 'flex', alignItems: 'center', gap: 10, width: 130, flexShrink: 0 }}>
+                    <Text style={{ fontSize: 18 }}>{src.icon}</Text>
+                    <View>
+                      <Text style={{ fontSize: 12, fontWeight: 600, color: src.color }}>{src.label}</Text>
+                      <Text style={{ fontSize: 10, color: '#94A3B8' }}>{src.batches.length}个批次</Text>
+                    </View>
+                  </View>
+                  <View style={{ flex: 1, height: 24, position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#F1F5F9' }}>
+                    <View
+                      style={{
+                        height: '100%',
+                        width: `${Math.max(8, percent)}%`,
+                        borderRadius: 12,
+                        background: `linear-gradient(90deg, ${src.color}DD 0%, ${src.color}88 100%)`
+                      }}
+                    ></View>
+                    <Text
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: 3,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: percent > 50 ? '#FFFFFF' : src.color
+                      }}
+                    >
+                      {src.count}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
 
         <View className={styles.sectionHeader}>
           <View className={styles.title}>
