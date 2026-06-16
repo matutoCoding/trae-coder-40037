@@ -58,7 +58,8 @@ const HomePage: React.FC = () => {
   const todayPassRate = useMemo(() => {
     if (todayInspections.length === 0) return 98.5;
     const pass = todayInspections.filter((r) => r.overallResult === 'pass').length;
-    return Number(((pass / todayInspections.length) * 100).toFixed(1));
+    const warn = todayInspections.filter((r) => r.overallResult === 'warning').length;
+    return Number((((pass + warn) / todayInspections.length) * 100).toFixed(1));
   }, [todayInspections]);
 
   const todayRunningHours = useMemo(() => {

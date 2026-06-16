@@ -252,6 +252,62 @@
   }
 }
 
+.batchFilter {
+  margin: -20rpx $page-padding 0;
+  position: relative;
+  z-index: 5;
+  background: $color-bg-card;
+  border-radius: $radius-lg $radius-lg 0 0;
+  padding: $spacing-md $spacing-md $spacing-sm;
+  box-shadow: 0 -4rpx 12rpx rgba(0,0,0,0.04);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-xs;
+
+  .filterItem {
+    padding: $spacing-sm $spacing-xs;
+    border-radius: $radius-md;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    text-align: center;
+    background: $color-bg-hover;
+    white-space: nowrap;
+
+    &.filterActive {
+      background: linear-gradient(135deg, rgba(184,115,51,0.18) 0%, rgba(184,115,51,0.08) 100%);
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+      border: 1rpx solid rgba(184,115,51,0.3);
+    }
+  }
+}
+
+.batchList {
+  border-radius: 0 0 $radius-lg $radius-lg;
+  margin-top: 0;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+
+  .noBatchTip {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    padding: $spacing-sm 0;
+    font-style: italic;
+  }
+}
+
+.summaryCard {
+  .conclusionRow {
+    padding: $spacing-md;
+    border-radius: $radius-md;
+    margin-bottom: $spacing-md;
+    border-radius: $radius-md;
+  }
+
+  .sumRow + .sumRow {
+    margin-top: $spacing-sm;
+  }
+}
+
 .empty {
   margin: 80rpx $page-padding;
   background: $color-bg-card;

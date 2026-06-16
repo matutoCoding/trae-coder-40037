@@ -30,22 +30,34 @@ const ReportsPage: React.FC = () => {
   const totalFeed = report.summary.totalFeed;
   const yieldRate = totalFeed > 0 ? ((totalOutput / totalFeed) * 100).toFixed(1) : '0.0';
 
-  const shiftStats = useMemo(() => {
-    const byShift = new Map<string, { feed: number; out: number; rates: number[]; hours: number; count: number }>();
+  const shiftBreakdown = useMemo(() => {
+    const byShift = new Map<string, { feed: number; out: number; rates: number[]; hours: number; count: number; anomalies: number }>();
+    ['morning', 'afternoon', 'night'].forEach((sh) => {
+      byShift.set(sh, { feed: 0, out: 0, rates: [], hours: 0, count: 0, anomalies: 0 });
+    });
     report.stats.forEach((s) => {
-      const k = s.date;
-      const prev = byShift.get(k) || { feed: 0, out: 0, rates: [], hours: 0, count: 0 };
+      const prev = byShift.get(s.shift)!;
       prev.feed += s.feedingWeight;
       prev.out += s.finishedWeight;
       prev.rates.push(s.passRate);
       prev.hours += s.runningHours;
       prev.count += 1;
-      byShift.set(k, prev);
+      if (s.passRate < 97) prev.anomalies += 1;
     });
-    return byShift;
+    return Array.from(byShift.entries()).map(([shift, v]) => ({
+      shift,
+      shiftName: shiftNameMap[shift as any],
+      feed: v.feed,
+      out: v.out,
+      avgRate: v.rates.length > 0 ? Number((v.rates.reduce((a, b) => a + b, 0) / v.rates.length).toFixed(1)) : 0,
+      hours: Number(v.hours.toFixed(1)),
+      count: v.count,
+      anomalies: v.anomalies
+    }));
   }, [report.stats]);
 
   const rangeDays = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : new Date().getDate();
+  const chartDays = report.outputChart.length;
 
   return (
     <View className={styles.page}>
@@ -64,7 +76,7 @@ const ReportsPage: React.FC = () => {
           ))}
         </View>
         <View className={styles.rangeTip}>
-          <Text>统计范围: {report.stats.length > 0 ? report.stats[0].date.slice(5) : '--'} ~ {report.stats.length > 0 ? report.stats[report.stats.length - 1].date.slice(5) : '--'} 共 {rangeDays}天 / {report.stats.length}个班次</Text>
+          <Text>📊 统计范围: {report.stats.length > 0 ? report.stats[0].date.slice(5) : '--'} ~ {report.stats.length > 0 ? report.stats[report.stats.length - 1].date.slice(5) : '--'} 共 {chartDays}天 / {report.stats.length}个班次 / 趋势图{chartDays}根柱子</Text>
         </View>
       </View>
 
@@ -106,7 +118,7 @@ const ReportsPage: React.FC = () => {
       <View className={styles.contentArea}>
         <View className={styles.sectionTitle}>
           <View className={styles.bar}></View>
-          <Text>产量趋势 ({dateRange === '7d' ? '近7天' : dateRange === '30d' ? '近30天' : '本月'})</Text>
+          <Text>产量趋势 ({dateRange === '7d' ? '近7天' : dateRange === '30d' ? '近30天' : '本月'}) · {chartDays}天数据</Text>
         </View>
         <SimpleChart
           title="每日成品产量"
@@ -145,7 +157,45 @@ const ReportsPage: React.FC = () => {
 
         <View className={styles.sectionTitle}>
           <View className={styles.bar}></View>
-          <Text>生产班次明细 ({report.stats.length}条)</Text>
+          <Text>班次维度对比 ({chartDays}天 / {report.stats.length}班次)</Text>
+        </View>
+        <ScrollView scrollX className={styles.tableScroll}>
+          <View className={styles.dataTable} style={{ marginBottom: 16 }}>
+            <View className={styles.tableHead}>
+              <Text style={{ minWidth: 100 }}>班次</Text>
+              <Text style={{ textAlign: 'right', minWidth: 90 }}>累计投料</Text>
+              <Text style={{ textAlign: 'right', minWidth: 90 }}>累计成品</Text>
+              <Text style={{ textAlign: 'right', minWidth: 80 }}>平均合格率</Text>
+              <Text style={{ textAlign: 'right', minWidth: 70 }}>运行工时</Text>
+              <Text style={{ textAlign: 'right', minWidth: 70 }}>异常次数</Text>
+              <Text style={{ textAlign: 'right', minWidth: 70 }}>班次数</Text>
+            </View>
+            {shiftBreakdown.map((row, idx) => (
+              <View className={styles.tableRow} key={`shift-${idx}`}>
+                <View style={{ minWidth: 100 }}>
+                  <Text style={{ fontWeight: 600 }}>{row.shiftName}</Text>
+                </View>
+                <Text style={{ textAlign: 'right', minWidth: 90 }}>{(row.feed / 1000).toFixed(1)}t</Text>
+                <Text style={{ textAlign: 'right', minWidth: 90 }}>{(row.out / 1000).toFixed(1)}t</Text>
+                <Text
+                  style={{ textAlign: 'right', minWidth: 80 }}
+                  className={row.avgRate >= 98.5 ? styles.rateOk : styles.rateWarn}
+                >
+                  {row.avgRate}%
+                </Text>
+                <Text style={{ textAlign: 'right', minWidth: 70 }}>{row.hours}h</Text>
+                <Text style={{ textAlign: 'right', minWidth: 70, color: row.anomalies > 0 ? '#EF4444' : '#10B981', fontWeight: 600 }}>
+                  {row.anomalies}
+                </Text>
+                <Text style={{ textAlign: 'right', minWidth: 70 }}>{row.count}</Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View className={styles.sectionTitle}>
+          <View className={styles.bar}></View>
+          <Text>生产班次明细 (共{report.stats.length}条 · 完整展示)</Text>
         </View>
         <ScrollView scrollX className={styles.tableScroll}>
           <View className={styles.dataTable}>
@@ -156,7 +206,7 @@ const ReportsPage: React.FC = () => {
               <Text style={{ textAlign: 'right', minWidth: 80 }}>合格率</Text>
               <Text style={{ textAlign: 'right', minWidth: 70 }}>工时</Text>
             </View>
-            {report.stats.slice().reverse().slice(0, 30).map((row, idx) => (
+            {report.stats.slice().reverse().map((row, idx) => (
               <View className={styles.tableRow} key={idx}>
                 <View style={{ minWidth: 140 }}>
                   <Text>{row.date.slice(5)}</Text>
