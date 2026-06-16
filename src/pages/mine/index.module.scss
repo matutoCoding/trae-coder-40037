@@ -1,0 +1,183 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.userHeader {
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-xl $page-padding 120rpx;
+  color: $color-text-white;
+  position: relative;
+
+  .avatar {
+    width: 140rpx;
+    height: 140rpx;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+    border: 4rpx solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56rpx;
+    font-weight: $font-weight-bold;
+    margin-right: $spacing-lg;
+    flex-shrink: 0;
+  }
+
+  .userInfo {
+    flex: 1;
+
+    .name {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      margin-bottom: $spacing-xs;
+    }
+
+    .pos {
+      font-size: $font-size-sm;
+      opacity: 0.9;
+      margin-bottom: $spacing-xs;
+    }
+
+    .id {
+      font-size: $font-size-xs;
+      opacity: 0.8;
+    }
+  }
+
+  .topRow {
+    display: flex;
+    align-items: center;
+  }
+
+  .statsRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    margin-top: $spacing-xl;
+    padding-top: $spacing-lg;
+    border-top: 1rpx solid rgba(255,255,255,0.15);
+  }
+
+  .statItem {
+    text-align: center;
+
+    .v { font-size: $font-size-xl; font-weight: $font-weight-bold; }
+    .l { font-size: $font-size-xs; opacity: 0.8; margin-top: 4rpx; }
+  }
+}
+
+.shiftCard {
+  margin: -80rpx $page-padding 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 10;
+  margin-bottom: $spacing-lg;
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm 0;
+
+    .k { font-size: $font-size-sm; color: $color-text-tertiary; }
+    .v { font-size: $font-size-md; color: $color-text-primary; font-weight: $font-weight-medium; }
+  }
+
+  .shiftNow {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md;
+    background: linear-gradient(135deg, rgba(184,115,51,0.1) 0%, rgba(184,115,51,0.05) 100%);
+    border-radius: $radius-md;
+    margin-bottom: $spacing-md;
+
+    .shiftLabel { font-size: $font-size-sm; color: $color-text-secondary; }
+    .shiftName { font-size: $font-size-xl; font-weight: $font-weight-bold; color: $color-primary; }
+    .shiftTime { font-size: $font-size-xs; color: $color-text-tertiary; margin-top: 4rpx; }
+
+    .switchBtn {
+      margin-left: auto;
+      padding: $spacing-sm $spacing-md;
+      background: $color-primary;
+      color: $color-text-white;
+      border-radius: $radius-button;
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+.menuGroup {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.groupTitle {
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  transition: all $transition-base;
+
+  &:last-child { border-bottom: none; }
+  &:active { background: $color-bg-hover; }
+
+  .icon {
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    color: $color-text-white;
+    margin-right: $spacing-md;
+    flex-shrink: 0;
+
+    &.c1 { background: linear-gradient(135deg, $color-primary, $color-primary-light); }
+    &.c2 { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+    &.c3 { background: linear-gradient(135deg, #10B981, #34D399); }
+    &.c4 { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+    &.c5 { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
+    &.c6 { background: linear-gradient(135deg, #EF4444, #F87171); }
+    &.c7 { background: linear-gradient(135deg, #0891B2, #22D3EE); }
+    &.c8 { background: linear-gradient(135deg, #475569, #64748B); }
+  }
+
+  .text { flex: 1; }
+  .name { font-size: $font-size-md; color: $color-text-primary; font-weight: $font-weight-medium; }
+  .desc { font-size: $font-size-xs; color: $color-text-tertiary; margin-top: 4rpx; }
+
+  .arrow {
+    font-size: $font-size-md;
+    color: $color-text-tertiary;
+    margin-left: $spacing-sm;
+  }
+
+  .badge {
+    padding: 4rpx 12rpx;
+    background: rgba(239,68,68,0.1);
+    color: $color-error;
+    font-size: $font-size-xs;
+    border-radius: $radius-round;
+    margin-right: $spacing-sm;
+  }
+}

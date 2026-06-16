@@ -1,0 +1,180 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $spacing-md $page-padding 120rpx;
+}
+
+.moduleHeader {
+  background: linear-gradient(135deg, #0891B2 0%, #22D3EE 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  color: $color-text-white;
+  margin-bottom: $spacing-md;
+
+  .title { font-size: $font-size-xl; font-weight: $font-weight-bold; margin-bottom: $spacing-xs; }
+  .desc { font-size: $font-size-sm; opacity: 0.9; margin-bottom: $spacing-lg; }
+
+  .resultBox {
+    background: rgba(255,255,255,0.15);
+    border-radius: $radius-md;
+    padding: $spacing-lg;
+    text-align: center;
+
+    .resultText {
+      font-size: 56rpx;
+      font-weight: $font-weight-bold;
+      margin-bottom: $spacing-xs;
+    }
+
+    .resultLabel {
+      font-size: $font-size-sm;
+      opacity: 0.9;
+    }
+
+    .batchInfo {
+      margin-top: $spacing-md;
+      padding-top: $spacing-md;
+      border-top: 1rpx solid rgba(255,255,255,0.2);
+      font-size: $font-size-sm;
+      opacity: 0.9;
+    }
+  }
+}
+
+.inspectionItems {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.inspectCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  border-left: 8rpx solid $color-success;
+
+  &.warn { border-left-color: $color-warning; }
+  &.fail { border-left-color: $color-error; }
+
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+  }
+
+  .name {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .valueBox {
+    .v { font-size: 44rpx; font-weight: $font-weight-bold; color: $color-text-primary; }
+    .u { font-size: $font-size-sm; color: $color-text-tertiary; margin-left: 4rpx; }
+    .t { font-size: $font-size-xs; color: $color-text-secondary; margin-top: 4rpx; }
+  }
+
+  .tag {
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-round;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+
+    &.pass { background: rgba(16,185,129,0.1); color: $color-success; }
+    &.warn { background: rgba(245,158,11,0.1); color: $color-warning; }
+    &.fail { background: rgba(239,68,68,0.1); color: $color-error; }
+  }
+}
+
+.weighCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+
+  .title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-lg;
+    display: flex;
+    align-items: center;
+
+    .bar {
+      width: 6rpx; height: 28rpx; background: $color-primary; border-radius: 3rpx; margin-right: $spacing-sm;
+    }
+  }
+
+  .weightMain {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    border-radius: $radius-md;
+    padding: $spacing-xl $spacing-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: $spacing-md;
+
+    .wv {
+      font-size: 80rpx;
+      font-weight: $font-weight-bold;
+      color: $color-primary;
+      line-height: 1;
+    }
+
+    .wu {
+      font-size: $font-size-lg;
+      color: $color-text-secondary;
+      margin-left: $spacing-sm;
+    }
+  }
+
+  .infoRow {
+    display: flex;
+    justify-content: space-between;
+    padding: $spacing-sm 0;
+    border-bottom: 1rpx solid $color-divider;
+
+    .k { font-size: $font-size-sm; color: $color-text-tertiary; }
+    .v { font-size: $font-size-sm; color: $color-text-primary; font-weight: $font-weight-medium; }
+
+    &:last-child { border-bottom: none; }
+  }
+}
+
+.fixedBottom {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -2rpx 16rpx rgba(0,0,0,0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.btnPrimary {
+  flex: 2; height: $button-height-lg; border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white; font-size: $font-size-md; font-weight: $font-weight-semibold;
+  border: none; display: flex; align-items: center; justify-content: center;
+  &:active { opacity: 0.9; transform: scale(0.98); }
+}
+.btnSecondary {
+  flex: 1; height: $button-height-lg; border-radius: $radius-button;
+  background: $color-bg-hover; color: $color-text-secondary;
+  font-size: $font-size-md; font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border; display: flex; align-items: center; justify-content: center;
+  &:active { opacity: 0.9; transform: scale(0.98); }
+}

@@ -1,0 +1,191 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $spacing-md $page-padding 120rpx;
+}
+
+.moduleHeader {
+  background: linear-gradient(135deg, #DC2626 0%, #F87171 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  color: $color-text-white;
+  margin-bottom: $spacing-md;
+
+  .title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    margin-bottom: $spacing-xs;
+  }
+
+  .desc {
+    font-size: $font-size-sm;
+    opacity: 0.9;
+    margin-bottom: $spacing-lg;
+  }
+
+  .bigTemp {
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-lg;
+  }
+
+  .tempValue {
+    font-size: 80rpx;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+  }
+
+  .tempUnit {
+    font-size: $font-size-lg;
+    opacity: 0.9;
+  }
+
+  .tempTarget {
+    font-size: $font-size-sm;
+    opacity: 0.8;
+    margin-top: $spacing-xs;
+  }
+
+  .tempStatus {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.2);
+    padding: $spacing-sm $spacing-md;
+    border-radius: $radius-round;
+    font-size: $font-size-sm;
+    margin-left: auto;
+    align-self: flex-start;
+  }
+}
+
+.tempChartBox {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.chartTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tempBars {
+  display: flex;
+  align-items: flex-end;
+  height: 280rpx;
+  gap: $spacing-xs;
+  border-bottom: 1rpx solid $color-divider;
+  padding-bottom: $spacing-md;
+}
+
+.tempBar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.barFill {
+  width: 100%;
+  max-width: 32rpx;
+  border-radius: $radius-xs $radius-xs 0 0;
+  background: linear-gradient(180deg, #F87171 0%, #DC2626 100%);
+  transition: all $transition-slow;
+
+  &.mid {
+    background: linear-gradient(180deg, #FB923C 0%, #F97316 100%);
+  }
+
+  &.low {
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+  }
+}
+
+.barLabel {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+  white-space: nowrap;
+}
+
+.barValue {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  margin-bottom: 4rpx;
+  font-weight: $font-weight-medium;
+}
+
+.formTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+
+  .bar {
+    width: 6rpx;
+    height: 28rpx;
+    background: $color-primary;
+    border-radius: 3rpx;
+    margin-right: $spacing-sm;
+  }
+
+  display: flex;
+  align-items: center;
+}
+
+.fixedBottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.btnPrimary {
+  flex: 2;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { opacity: 0.9; transform: scale(0.98); }
+}
+
+.btnSecondary {
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { opacity: 0.9; transform: scale(0.98); }
+}

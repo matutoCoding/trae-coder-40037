@@ -1,0 +1,111 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.desc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+  line-height: 1.4;
+}
+
+.dataRow {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-lg;
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+}
+
+.dataItem {
+  flex: 1;
+}
+
+.dataLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.dataValue {
+  font-size: 36rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+
+  .unit {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    font-weight: $font-weight-normal;
+    margin-left: 4rpx;
+  }
+}
+
+.targetValue {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-normal;
+
+  .label {
+    color: $color-text-tertiary;
+    margin-right: 4rpx;
+  }
+}
+
+.tempHigh {
+  color: $color-temp-high;
+}
+
+.tempMedium {
+  color: $color-temp-medium;
+}
+
+.tempLow {
+  color: $color-temp-low;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.time {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.arrow {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}

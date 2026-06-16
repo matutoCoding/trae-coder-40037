@@ -1,0 +1,145 @@
+@use '@/styles/variables.scss' as *;
+
+.chartCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+}
+
+.chartTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.chartUnit {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 320rpx;
+  padding: $spacing-md 0;
+  gap: $spacing-sm;
+}
+
+.barItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.barWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.barValue {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-xs;
+}
+
+.bar {
+  width: 100%;
+  max-width: 48rpx;
+  min-height: 8rpx;
+  background: linear-gradient(180deg, $color-primary-light 0%, $color-primary 100%);
+  border-radius: $radius-xs $radius-xs 0 0;
+  transition: all $transition-slow;
+
+  &.blue {
+    background: linear-gradient(180deg, $color-secondary-light 0%, $color-secondary 100%);
+  }
+
+  &.green {
+    background: linear-gradient(180deg, #34D399 0%, $color-success 100%);
+  }
+
+  &.orange {
+    background: linear-gradient(180deg, #FBBF24 0%, $color-warning 100%);
+  }
+}
+
+.barLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+}
+
+.lineChart {
+  position: relative;
+  height: 280rpx;
+  padding: $spacing-lg 0 $spacing-md;
+}
+
+.linePoints {
+  position: absolute;
+  top: $spacing-lg;
+  left: 0;
+  right: 0;
+  bottom: $spacing-md;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.linePoint {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.pointDot {
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  border: 4rpx solid $color-bg-card;
+  box-shadow: 0 0 0 2rpx $color-primary-light;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.pointValue {
+  position: absolute;
+  font-size: 20rpx;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  transform: translateX(-50%);
+  margin-top: -36rpx;
+  white-space: nowrap;
+}
+
+.pointLabel {
+  position: absolute;
+  bottom: -32rpx;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}

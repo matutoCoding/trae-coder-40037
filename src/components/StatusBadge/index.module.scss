@@ -1,0 +1,74 @@
+@use '@/styles/variables.scss' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  line-height: 1;
+}
+
+.dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 8rpx;
+}
+
+.running {
+  background: rgba(16, 185, 129, 0.1);
+  color: $color-status-running;
+  .dot {
+    background: $color-status-running;
+  }
+}
+
+.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: $color-status-warning;
+  .dot {
+    background: $color-status-warning;
+  }
+}
+
+.stopped {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-status-stopped;
+  .dot {
+    background: $color-status-stopped;
+  }
+}
+
+.standby {
+  background: rgba(107, 114, 128, 0.1);
+  color: $color-status-standby;
+  .dot {
+    background: $color-status-standby;
+  }
+}
+
+.pass {
+  background: rgba(16, 185, 129, 0.1);
+  color: $color-success;
+  .dot {
+    background: $color-success;
+  }
+}
+
+.fail {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-error;
+  .dot {
+    background: $color-error;
+  }
+}
+
+.pending {
+  background: rgba(107, 114, 128, 0.1);
+  color: $color-info;
+  .dot {
+    background: $color-info;
+  }
+}

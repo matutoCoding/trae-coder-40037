@@ -1,0 +1,148 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-xl $page-padding 140rpx;
+  color: $color-text-white;
+  position: relative;
+
+  .pageTitle { font-size: $font-size-xl; font-weight: $font-weight-bold; margin-bottom: $spacing-xs; }
+  .pageSub { font-size: $font-size-sm; opacity: 0.9; }
+
+  .dateSwitch {
+    display: inline-flex;
+    background: rgba(255,255,255,0.2);
+    border-radius: $radius-round;
+    padding: 4rpx;
+    margin-top: $spacing-lg;
+  }
+
+  .dateItem {
+    padding: $spacing-xs $spacing-md;
+    font-size: $font-size-sm;
+    border-radius: $radius-round;
+    &.active {
+      background: $color-text-white;
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+    }
+  }
+}
+
+.summaryCards {
+  margin: -100rpx $page-padding 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  position: relative;
+  z-index: 10;
+}
+
+.sumCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .value {
+    font-size: 40rpx;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    line-height: 1.2;
+
+    .unit { font-size: $font-size-sm; color: $color-text-tertiary; font-weight: normal; margin-left: 4rpx; }
+  }
+
+  .trend {
+    font-size: $font-size-xs;
+    margin-top: $spacing-xs;
+    &.up { color: $color-success; }
+    &.down { color: $color-error; }
+  }
+}
+
+.contentArea { padding: $spacing-lg $page-padding 0; }
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+
+  .bar { width: 8rpx; height: 32rpx; background: $color-primary-gradient; border-radius: 4rpx; margin-right: $spacing-sm; }
+}
+
+.dataTable {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  padding: $spacing-md;
+  font-size: $font-size-xs;
+  color: $color-text-primary;
+  border-bottom: 1rpx solid $color-divider;
+  align-items: center;
+
+  &:last-child { border-bottom: none; }
+
+  .shift {
+    display: inline-flex;
+    padding: 4rpx 12rpx;
+    border-radius: $radius-xs;
+    font-size: 20rpx;
+    background: rgba(184,115,51,0.1);
+    color: $color-primary;
+  }
+
+  .rateOk { color: $color-success; font-weight: $font-weight-semibold; }
+  .rateWarn { color: $color-warning; font-weight: $font-weight-semibold; }
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.kpiBox {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  text-align: center;
+
+  .kpiV { font-size: 40rpx; font-weight: $font-weight-bold; color: $color-primary; margin-bottom: 4rpx; }
+  .kpiL { font-size: $font-size-xs; color: $color-text-tertiary; }
+}
