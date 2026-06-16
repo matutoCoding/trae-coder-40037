@@ -1,7 +1,7 @@
 export type DeviceStatus = 'running' | 'warning' | 'stopped' | 'standby';
 export type ProcessModule = 'feeding' | 'melting' | 'furnace' | 'casting' | 'rolling' | 'pickling' | 'inspection';
 export type ShiftType = 'morning' | 'afternoon' | 'night';
-export type QualityResult = 'pass' | 'fail' | 'pending';
+export type QualityResult = 'pass' | 'warning' | 'fail' | 'pending';
 
 export interface BaseRecord {
   id: string;

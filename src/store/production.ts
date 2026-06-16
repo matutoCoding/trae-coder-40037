@@ -146,12 +146,20 @@ const initAlerts: AlertItem[] = [
 const extractBatchNos = (
   feeding: FeedingRecord[],
   melting: MeltingRecord[],
+  furnace: FurnaceRecord[],
   casting: CastingRecord[],
+  rolling: RollingRecord[],
+  pickling: PicklingRecord[],
   inspection: InspectionRecord[]
 ): string[] => {
   const set = new Set<string>();
-  [...feeding, ...melting, ...casting, ...inspection].forEach((r) => set.add(r.batchNo));
+  [...feeding, ...melting, ...furnace, ...casting, ...rolling, ...pickling, ...inspection].forEach((r) => set.add(r.batchNo));
   return Array.from(set).sort().reverse();
+};
+
+const refreshBatchNos = (state: { records: RecordsByKey }): string[] => {
+  const r = state.records;
+  return extractBatchNos(r.feeding, r.melting, r.furnace, r.casting, r.rolling, r.pickling, r.inspection);
 };
 
 const generateExtendedStats = (baseStats: ProductionStats[], days: number): ProductionStats[] => {
@@ -189,7 +197,7 @@ const generateExtendedStats = (baseStats: ProductionStats[], days: number): Prod
   return result;
 };
 
-const generateChartFromStats = (stats: ProductionStats[], key: 'output' | 'passRate'): ChartDataItem[] => {
+const generateChartFromStats = (stats: ProductionStats[], key: 'output' | 'passRate', range: '7d' | '30d' | 'month' = '7d'): ChartDataItem[] => {
   const byDate = new Map<string, { output: number; rates: number[]; count: number }>();
   stats.forEach((s) => {
     const prev = byDate.get(s.date) || { output: 0, rates: [], count: 0 };
@@ -208,7 +216,8 @@ const generateChartFromStats = (stats: ProductionStats[], key: 'output' | 'passR
       items.push({ label, value: Number(avg.toFixed(1)) });
     }
   });
-  return items.slice(-7);
+  const sliceCount = range === '7d' ? 7 : range === '30d' ? 30 : new Date().getDate();
+  return items.slice(-sliceCount);
 };
 
 export const useProductionStore = create<ProductionState>((set, get) => ({
@@ -227,7 +236,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
   passRateChart: [...initPassRate],
   temperatureTrend: [...initTempTrend],
   alerts: [...initAlerts],
-  currentBatchNos: extractBatchNos(initFeeding, initMelting, initCasting, initInspection),
+  currentBatchNos: extractBatchNos(initFeeding, initMelting, initFurnace, initCasting, initRolling, initPickling, initInspection),
 
   getNextBatchNo: () => {
     const date = new Date();
@@ -236,6 +245,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     const todayRecords = [
       ...records.feeding,
       ...records.melting,
+      ...records.furnace,
       ...records.casting,
       ...records.rolling,
       ...records.pickling,
@@ -260,16 +270,16 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newFeeding = [newRec, ...state.records.feeding];
-      const newBatchNos = extractBatchNos(newFeeding, state.records.melting, state.records.casting, state.records.inspection);
+      const newRecords = { ...state.records, feeding: newFeeding };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'feeding'
           ? { ...m, currentValue: ((newFeeding.slice(0, 5).reduce((s, r) => s + r.cathodeCopperWeight, 0) / 1000).toFixed(1)), updateTime: nowStr() }
           : m
       );
       return {
-        records: { ...state.records, feeding: newFeeding },
+        records: newRecords,
         moduleStatus: ms,
-        currentBatchNos: newBatchNos
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -290,6 +300,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newMelting = [newRec, ...state.records.melting];
+      const newRecords = { ...state.records, melting: newMelting };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'melting'
           ? { ...m, currentValue: String(record.meltingTemp), updateTime: nowStr(), status: record.meltingTemp < 1170 ? 'warning' : 'running' as DeviceStatus }
@@ -300,9 +311,10 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
       tt.push({ time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, value: record.meltingTemp });
       while (tt.length > 10) tt.shift();
       return {
-        records: { ...state.records, melting: newMelting },
+        records: newRecords,
         moduleStatus: ms,
-        temperatureTrend: tt
+        temperatureTrend: tt,
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -323,14 +335,16 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newFurnace = [newRec, ...state.records.furnace];
+      const newRecords = { ...state.records, furnace: newFurnace };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'furnace'
           ? { ...m, currentValue: String(record.liquidLevel), updateTime: nowStr(), status: record.liquidLevel < 75 ? 'warning' : 'running' as DeviceStatus, description: record.liquidLevel < 75 ? '液位偏低，注意补料' : '保温炉液位正常' }
           : m
       );
       return {
-        records: { ...state.records, furnace: newFurnace },
-        moduleStatus: ms
+        records: newRecords,
+        moduleStatus: ms,
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -351,16 +365,16 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newCasting = [newRec, ...state.records.casting];
-      const newBatchNos = extractBatchNos(state.records.feeding, state.records.melting, newCasting, state.records.inspection);
+      const newRecords = { ...state.records, casting: newCasting };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'casting'
           ? { ...m, currentValue: String(record.castingWheelSpeed), updateTime: nowStr() }
           : m
       );
       return {
-        records: { ...state.records, casting: newCasting },
+        records: newRecords,
         moduleStatus: ms,
-        currentBatchNos: newBatchNos
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -383,14 +397,16 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newRolling = [newRec, ...state.records.rolling];
+      const newRecords = { ...state.records, rolling: newRolling };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'rolling'
           ? { ...m, currentValue: String(record.rodDiameter), updateTime: nowStr(), status: Math.abs(newRec.diameterTolerance) > 0.05 ? 'warning' : 'running' as DeviceStatus }
           : m
       );
       return {
-        records: { ...state.records, rolling: newRolling },
-        moduleStatus: ms
+        records: newRecords,
+        moduleStatus: ms,
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -413,14 +429,16 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newPickling = [newRec, ...state.records.pickling];
+      const newRecords = { ...state.records, pickling: newPickling };
       const ms = state.moduleStatus.map((m) =>
         m.key === 'pickling'
           ? { ...m, currentValue: String(record.coilWeight), updateTime: nowStr(), status: record.acidConcentration < 12.0 ? 'warning' : 'running' as DeviceStatus, description: record.acidConcentration < 12.0 ? '酸浓度偏低，注意补酸' : '酸洗钝化正常' }
           : m
       );
       return {
-        records: { ...state.records, pickling: newPickling },
-        moduleStatus: ms
+        records: newRecords,
+        moduleStatus: ms,
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -443,18 +461,19 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     };
     set((state) => {
       const newInspection = [newRec, ...state.records.inspection];
-      const newBatchNos = extractBatchNos(state.records.feeding, state.records.melting, state.records.casting, newInspection);
+      const newRecords = { ...state.records, inspection: newInspection };
       const passCount = newInspection.filter((r) => r.overallResult === 'pass').length;
-      const passRateVal = Number(((passCount / newInspection.length) * 100).toFixed(1));
+      const warningCount = newInspection.filter((r) => r.overallResult === 'warning').length;
+      const passRateVal = Number((((passCount + warningCount) / newInspection.length) * 100).toFixed(1));
       const ms = state.moduleStatus.map((m) =>
         m.key === 'inspection'
-          ? { ...m, currentValue: String(passRateVal), updateTime: nowStr() }
+          ? { ...m, currentValue: String(passRateVal), updateTime: nowStr(), description: warningCount > 0 ? `${warningCount}批需关注` : '检验流程正常' }
           : m
       );
       return {
-        records: { ...state.records, inspection: newInspection },
+        records: newRecords,
         moduleStatus: ms,
-        currentBatchNos: newBatchNos
+        currentBatchNos: refreshBatchNos({ records: newRecords })
       };
     });
   },
@@ -513,9 +532,9 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
     const totalHours = stats.reduce((s, r) => s + r.runningHours, 0);
     const avgPassRate = stats.length > 0 ? stats.reduce((s, r) => s + r.passRate, 0) / stats.length : 0;
     return {
-      stats: stats.slice(-30),
-      outputChart: generateChartFromStats(stats, 'output'),
-      passRateChart: generateChartFromStats(stats, 'passRate'),
+      stats: stats.slice(-range === '7d' ? 21 : range === '30d' ? 90 : new Date().getDate() * 3),
+      outputChart: generateChartFromStats(stats, 'output', range),
+      passRateChart: generateChartFromStats(stats, 'passRate', range),
       summary: {
         totalOutput,
         avgPassRate: Number(avgPassRate.toFixed(1)),

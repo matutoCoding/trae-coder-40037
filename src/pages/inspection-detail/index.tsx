@@ -22,13 +22,18 @@ const InspectionDetailPage: React.FC = () => {
   const moduleStatus = useProductionStore((s) => s.moduleStatus.find((m) => m.key === 'inspection'));
   const addInspectionRecord = useProductionStore((s) => s.addInspectionRecord);
   const getNextBatchNo = useProductionStore((s) => s.getNextBatchNo);
+  const currentBatchNos = useProductionStore((s) => s.currentBatchNos);
 
   const last = records[0];
 
+  const [isNewBatch, setIsNewBatch] = useState(true);
+  const [selectedBatchNo, setSelectedBatchNo] = useState<string>('');
   const [surfaceOxidation, setSurfaceOxidation] = useState<QualityResult>('pass');
   const [oxidationDetail, setOxidationDetail] = useState<string>('表面光洁，无氧化斑');
   const [resistivity, setResistivity] = useState<string>('0.01720');
   const [weighbridgeWeight, setWeighbridgeWeight] = useState<string>('2500');
+
+  const finalBatchNo = isNewBatch ? getNextBatchNo() : selectedBatchNo;
 
   const todayRecords = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -38,7 +43,8 @@ const InspectionDetailPage: React.FC = () => {
   const todayPassRate = useMemo(() => {
     if (todayRecords.length === 0) return '0.0';
     const p = todayRecords.filter((r) => r.overallResult === 'pass').length;
-    return ((p / todayRecords.length) * 100).toFixed(1);
+    const w = todayRecords.filter((r) => r.overallResult === 'warning').length;
+    return (((p + w) / todayRecords.length) * 100).toFixed(1);
   }, [todayRecords]);
 
   const resistNum = parseFloat(resistivity) || RESISTIVITY_STANDARD;
@@ -60,7 +66,12 @@ const InspectionDetailPage: React.FC = () => {
       Taro.showToast({ title: '请填写完整参数', icon: 'none' });
       return;
     }
+    if (!isNewBatch && !selectedBatchNo) {
+      Taro.showToast({ title: '请选择或生成批次号', icon: 'none' });
+      return;
+    }
     addInspectionRecord({
+      batchNo: finalBatchNo,
       surfaceOxidation,
       oxidationDetail,
       resistivity: r,
@@ -98,7 +109,7 @@ const InspectionDetailPage: React.FC = () => {
           </Text>
           <Text className={styles.resultLabel}>录入综合判定预览</Text>
           <View className={styles.batchInfo}>
-            <Text>批次 {getNextBatchNo()} · 检验员 {currentUser.name}</Text>
+            <Text>批次 {finalBatchNo} · 检验员 {currentUser.name}</Text>
           </View>
         </View>
         <View className={styles.stats}>
@@ -122,6 +133,77 @@ const InspectionDetailPage: React.FC = () => {
           type={overallResult === 'fail' ? 'warning' : 'running'}
           text={overallResult === 'fail' ? '存在不合格项' : '检验流程正常'}
         />
+      </View>
+
+      <View className={styles.inputForm}>
+        <View className={styles.formTitle}>
+          <View className={styles.bar}></View>
+          <Text>📋 选择批次号</Text>
+        </View>
+        <View style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <View style={{ display: 'flex', gap: 12 }}>
+            <View
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: 8,
+                background: isNewBatch ? 'rgba(184,115,51,0.12)' : '#F8FAFC',
+                border: isNewBatch ? '2rpx solid rgba(184,115,51,0.4)' : '2rpx solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+              onClick={() => setIsNewBatch(true)}
+            >
+              <Text style={{ fontSize: 13, color: isNewBatch ? '#B87333' : '#475569', fontWeight: isNewBatch ? 600 : 400 }}>🆕 自动生成新批次</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>{getNextBatchNo()}</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: 8,
+                background: !isNewBatch ? 'rgba(184,115,51,0.12)' : '#F8FAFC',
+                border: !isNewBatch ? '2rpx solid rgba(184,115,51,0.4)' : '2rpx solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+              onClick={() => {
+                setIsNewBatch(false);
+                if (currentBatchNos.length > 0 && !selectedBatchNo) {
+                  setSelectedBatchNo(currentBatchNos[0]);
+                }
+              }}
+            >
+              <Text style={{ fontSize: 13, color: !isNewBatch ? '#B87333' : '#475569', fontWeight: !isNewBatch ? 600 : 400 }}>🔗 沿用已有批次</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>共{currentBatchNos.length}个可选</Text>
+            </View>
+          </View>
+          {!isNewBatch && currentBatchNos.length > 0 && (
+            <View style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: 12, background: '#F8FAFC', borderRadius: 8 }}>
+              <Text style={{ fontSize: 12, color: '#64748B', width: '100%', marginBottom: 4 }}>最近批次（点击选择）：</Text>
+              {currentBatchNos.slice(0, 10).map((b) => (
+                <View
+                  key={b}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    background: selectedBatchNo === b ? '#B87333' : '#FFFFFF',
+                    border: selectedBatchNo === b ? 'none' : '1px solid #E2E8F0'
+                  }}
+                  onClick={() => setSelectedBatchNo(b)}
+                >
+                  <Text style={{ fontSize: 12, color: selectedBatchNo === b ? '#FFFFFF' : '#475569', fontWeight: selectedBatchNo === b ? 600 : 400 }}>
+                    {b}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
       <View className={styles.inspectionItems}>
@@ -222,7 +304,7 @@ const InspectionDetailPage: React.FC = () => {
         </View>
         <View className={styles.infoRow}>
           <Text className={styles.k}>过磅批次</Text>
-          <Text className={styles.v}>{getNextBatchNo()}</Text>
+          <Text className={styles.v}>{finalBatchNo}</Text>
         </View>
         <View className={styles.infoRow}>
           <Text className={styles.k}>司磅员</Text>

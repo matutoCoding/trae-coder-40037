@@ -17,12 +17,17 @@ const PicklingDetailPage: React.FC = () => {
   const moduleStatus = useProductionStore((s) => s.moduleStatus.find((m) => m.key === 'pickling'));
   const addPicklingRecord = useProductionStore((s) => s.addPicklingRecord);
   const getNextBatchNo = useProductionStore((s) => s.getNextBatchNo);
+  const currentBatchNos = useProductionStore((s) => s.currentBatchNos);
 
   const last = records[0];
 
+  const [isNewBatch, setIsNewBatch] = useState(true);
+  const [selectedBatchNo, setSelectedBatchNo] = useState<string>('');
   const [coilerNo, setCoilerNo] = useState<string>(COILER_OPTIONS[0]);
   const [acidConcentration, setAcidConcentration] = useState<string>('12.5');
   const [coilWeight, setCoilWeight] = useState<string>('2550');
+
+  const finalBatchNo = isNewBatch ? getNextBatchNo() : selectedBatchNo;
 
   const todayRecords = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -43,7 +48,12 @@ const PicklingDetailPage: React.FC = () => {
       Taro.showToast({ title: '请填写完整参数', icon: 'none' });
       return;
     }
+    if (!isNewBatch && !selectedBatchNo) {
+      Taro.showToast({ title: '请选择或生成批次号', icon: 'none' });
+      return;
+    }
     addPicklingRecord({
+      batchNo: finalBatchNo,
       coilerNo,
       acidConcentration: ac,
       coilWeight: cw,
@@ -99,6 +109,77 @@ const PicklingDetailPage: React.FC = () => {
           text={moduleStatus?.status === 'warning' ? '注意补酸' : '酸洗系统运行正常'}
         />
         {acidWarn && <StatusBadge type="warning" text="当前酸浓度偏低" />}
+      </View>
+
+      <View className={styles.inputForm}>
+        <View className={styles.formTitle}>
+          <View className={styles.bar}></View>
+          <Text>📋 选择批次号</Text>
+        </View>
+        <View style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <View style={{ display: 'flex', gap: 12 }}>
+            <View
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: 8,
+                background: isNewBatch ? 'rgba(184,115,51,0.12)' : '#F8FAFC',
+                border: isNewBatch ? '2rpx solid rgba(184,115,51,0.4)' : '2rpx solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+              onClick={() => setIsNewBatch(true)}
+            >
+              <Text style={{ fontSize: 13, color: isNewBatch ? '#B87333' : '#475569', fontWeight: isNewBatch ? 600 : 400 }}>🆕 自动生成新批次</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>{getNextBatchNo()}</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: 8,
+                background: !isNewBatch ? 'rgba(184,115,51,0.12)' : '#F8FAFC',
+                border: !isNewBatch ? '2rpx solid rgba(184,115,51,0.4)' : '2rpx solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+              onClick={() => {
+                setIsNewBatch(false);
+                if (currentBatchNos.length > 0 && !selectedBatchNo) {
+                  setSelectedBatchNo(currentBatchNos[0]);
+                }
+              }}
+            >
+              <Text style={{ fontSize: 13, color: !isNewBatch ? '#B87333' : '#475569', fontWeight: !isNewBatch ? 600 : 400 }}>🔗 沿用已有批次</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>共{currentBatchNos.length}个可选</Text>
+            </View>
+          </View>
+          {!isNewBatch && currentBatchNos.length > 0 && (
+            <View style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: 12, background: '#F8FAFC', borderRadius: 8 }}>
+              <Text style={{ fontSize: 12, color: '#64748B', width: '100%', marginBottom: 4 }}>最近批次（点击选择）：</Text>
+              {currentBatchNos.slice(0, 10).map((b) => (
+                <View
+                  key={b}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    background: selectedBatchNo === b ? '#B87333' : '#FFFFFF',
+                    border: selectedBatchNo === b ? 'none' : '1px solid #E2E8F0'
+                  }}
+                  onClick={() => setSelectedBatchNo(b)}
+                >
+                  <Text style={{ fontSize: 12, color: selectedBatchNo === b ? '#FFFFFF' : '#475569', fontWeight: selectedBatchNo === b ? 600 : 400 }}>
+                    {b}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
       <View className={styles.infoCard}>
@@ -174,7 +255,7 @@ const PicklingDetailPage: React.FC = () => {
 
           <View className={styles.item}>
             <Text className={styles.label}>批次号(自动)</Text>
-            <Text className={`${styles.value} ${styles.hl}`}>{getNextBatchNo()}</Text>
+            <Text className={`${styles.value} ${styles.hl}`}>{finalBatchNo}</Text>
           </View>
           <View className={styles.item}>
             <Text className={styles.label}>操作人</Text>

@@ -608,6 +608,7 @@ export const statusNameMap: Record<string, { text: string; color: string }> = {
 
 export const qualityNameMap: Record<string, { text: string; color: string }> = {
   pass: { text: '合格', color: '#10B981' },
+  warning: { text: '需关注', color: '#F59E0B' },
   fail: { text: '不合格', color: '#EF4444' },
   pending: { text: '待检', color: '#6B7280' }
 };
