@@ -1,43 +1,45 @@
-import React from 'react';
-import { View, Text, ScrollView, Button } from '@tarojs/components';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Button, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import DataForm, { FormItemData } from '@/components/DataForm';
 import RecordList, { ListItem } from '@/components/RecordList';
 import SectionHeader from '@/components/SectionHeader';
 import StatusBadge from '@/components/StatusBadge';
-import { meltingRecords, temperatureTrend, currentUser, shiftNameMap } from '@/data/mockData';
+import { useProductionStore } from '@/store/production';
 
 const MeltingDetailPage: React.FC = () => {
-  const currentTemp = temperatureTrend[temperatureTrend.length - 1].value;
+  const { records, addMeltingRecord, moduleStatus, temperatureTrend } = useProductionStore();
+  const meltingList = records.melting;
+
+  const [meltTemp, setMeltTemp] = useState<string>('1182');
+  const [furnaceNo, setFurnaceNo] = useState<string>('1#竖炉');
   const targetTemp = 1180;
+
+  const modStatus = moduleStatus.find((m) => m.key === 'melting');
+
+  const currentTemp = useMemo(
+    () => (temperatureTrend.length > 0 ? temperatureTrend[temperatureTrend.length - 1].value : 1180),
+    [temperatureTrend]
+  );
   const tempDiff = currentTemp - targetTemp;
 
+  const maxTemp = Math.max(...temperatureTrend.map((t) => t.value));
+  const minTemp = Math.min(...temperatureTrend.map((t) => t.value));
+  const tempRange = maxTemp - minTemp || 1;
+
   const handleSubmit = () => {
-    console.log('[MeltingDetail] 提交温度记录');
-    Taro.showToast({ title: '记录已提交', icon: 'success' });
+    const t = Number(meltTemp);
+    if (!t || t < 1000 || t > 1300) {
+      Taro.showToast({ title: '温度范围1000-1300℃', icon: 'none' });
+      return;
+    }
+    addMeltingRecord({ furnaceNo, meltingTemp: t, targetTemp });
+    Taro.showToast({ title: '温度记录已录入', icon: 'success' });
+    console.log('[MeltingDetail] 录入温度:', t);
+    setMeltTemp(String(t));
   };
 
-  const lastRecord = meltingRecords[0];
-  const currentInfo: FormItemData[] = [
-    { label: '炉号', value: lastRecord.furnaceNo, highlight: true },
-    { label: '当前温度', value: `${currentTemp} ℃`, variant: tempDiff >= 0 ? 'success' : 'warning' },
-    { label: '目标温度', value: `${targetTemp} ℃` },
-    { label: '温度偏差', value: `${tempDiff > 0 ? '+' : ''}${tempDiff} ℃` },
-    { label: '操作人员', value: currentUser.name },
-    { label: '所属班次', value: shiftNameMap[currentUser.currentShift] }
-  ];
-
-  const lastInfo: FormItemData[] = [
-    { label: '批次号', value: lastRecord.batchNo, highlight: true },
-    { label: '熔化温度', value: `${lastRecord.meltingTemp} ℃`, variant: 'success' },
-    { label: '目标温度', value: `${lastRecord.targetTemp} ℃` },
-    { label: '燃料消耗', value: `${lastRecord.fuelConsumption} m³` },
-    { label: '熔化时长', value: `${lastRecord.meltingDuration} 分钟` },
-    { label: '操作人', value: lastRecord.operator }
-  ];
-
-  const recordList: ListItem[] = meltingRecords.map((r) => ({
+  const recordList: ListItem[] = meltingList.map((r) => ({
     id: r.id,
     batchNo: r.batchNo,
     time: r.createTime.slice(5),
@@ -50,78 +52,177 @@ const MeltingDetailPage: React.FC = () => {
     ]
   }));
 
-  const maxTemp = Math.max(...temperatureTrend.map((t) => t.value));
-  const minTemp = Math.min(...temperatureTrend.map((t) => t.value));
-  const tempRange = maxTemp - minTemp || 1;
-
   return (
     <ScrollView scrollY className={styles.detailPage}>
       <View className={styles.moduleHeader}>
-      <Text className={styles.title}>竖炉熔化</Text>
-      <Text className={styles.desc}>1#竖炉 · 熔化温度监控</Text>
-      <View style={{ display: 'flex', alignItems: 'center' }}>
-        <View className={styles.bigTemp}>
-          <View>
-          <Text className={styles.tempValue}>{currentTemp}</Text>
-          <Text className={styles.tempUnit}>℃</Text>
-          <View className={styles.tempTarget}>目标 {targetTemp} ℃ · 偏差 {tempDiff > 0 ? '+' : ''}{tempDiff} ℃</View>
-        </View>
-        <View className={styles.tempStatus}>温度正常</View>
-        </View>
-      </View>
-    </View>
-
-    <View style={{ marginBottom: 8 }}>
-      <StatusBadge type="running" text="1#竖炉运行中" />
-    </View>
-
-    <View className={styles.tempChartBox}>
-      <View className={styles.chartTitle}>
-        <Text>今日温度趋势</Text>
-        <Text style={{ fontSize: 22, color: '#94A3B8' }}>每小时记录</Text>
-      </View>
-      <View className={styles.tempBars}>
-        {temperatureTrend.map((item, idx) => {
-        const h = ((item.value - minTemp) / tempRange) * 100;
-        const safeH = Math.max(h, 10);
-        const variant = item.value >= 1182 ? '' : item.value >= 1178 ? 'mid' : 'low';
-        return (
-          <View className={styles.tempBar} key={idx}>
-            <Text className={styles.barValue}>{item.value}</Text>
-            <View
-              className={`${styles.barFill} ${variant !== '' ? styles[variant] : ''}`}
-              style={{ height: `${safeH}%` }}
-            ></View>
-            <Text className={styles.barLabel}>{item.time}</Text>
+        <Text className={styles.title}>竖炉熔化</Text>
+        <Text className={styles.desc}>1#竖炉 · 熔化温度监控</Text>
+        <View style={{ display: 'flex', alignItems: 'center' }}>
+          <View className={styles.bigTemp}>
+            <View>
+              <Text className={styles.tempValue}>{currentTemp}</Text>
+              <Text className={styles.tempUnit}>℃</Text>
+              <View className={styles.tempTarget}>
+                目标 {targetTemp} ℃ · 偏差 {tempDiff > 0 ? '+' : ''}
+                {tempDiff} ℃
+              </View>
+            </View>
+            <View className={styles.tempStatus}>
+              {currentTemp >= 1175 ? '温度正常' : '温度偏低'}
+            </View>
           </View>
-        );
-      })}
+        </View>
       </View>
-    </View>
 
-    <SectionHeader title="当前熔化参数录入" />
-    <DataForm
-      title="实时监控数据"
-      items={currentInfo}
-      showActions
-      primaryText="记录温度"
-      secondaryText="查看曲线"
-      onPrimaryClick={handleSubmit}
-      onSecondaryClick={() => Taro.showToast({ title: '温度曲线详情', icon: 'none' })}
-    />
+      <View style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <StatusBadge type={modStatus?.status || 'running'} text={modStatus?.status === 'running' ? '竖炉运行中' : '注意'} />
+        <StatusBadge type="running" text={`${furnaceNo}`} showDot={false} />
+      </View>
 
-    <SectionHeader title="最近记录" />
-    <DataForm title="上一批次记录" items={lastInfo} />
+      <View
+        style={{
+          background: '#fff',
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: '0 2rpx 12rpx rgba(0,0,0,0.08)',
+          marginBottom: 16
+        }}
+      >
+        <View className={styles.chartTitle}>
+          <Text>🌡 现场录入温度</Text>
+        </View>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ fontSize: 24, color: '#64748B', marginBottom: 8, display: 'block' }}>
+            竖炉选择
+          </Text>
+          <View style={{ display: 'flex', gap: 12 }}>
+            {['1#竖炉', '2#竖炉'].map((f) => (
+              <Text
+                key={f}
+                onClick={() => setFurnaceNo(f)}
+                style={{
+                  flex: 1,
+                  height: 72,
+                  lineHeight: '72rpx',
+                  textAlign: 'center',
+                  borderRadius: 12,
+                  background: furnaceNo === f ? 'rgba(220,38,38,0.1)' : '#F8FAFC',
+                  color: furnaceNo === f ? '#DC2626' : '#475569',
+                  fontWeight: furnaceNo === f ? 600 : 400,
+                  border: furnaceNo === f ? '2rpx solid rgba(220,38,38,0.3)' : '2rpx solid transparent',
+                  fontSize: 26
+                }}
+              >
+                {f}
+              </Text>
+            ))}
+          </View>
+        </View>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ fontSize: 24, color: '#64748B', marginBottom: 8, display: 'block' }}>
+            当前熔化温度 (℃)
+          </Text>
+          <Input
+            type="digit"
+            value={meltTemp}
+            onInput={(e: any) => setMeltTemp(e.detail.value)}
+            style={{
+              background: '#F8FAFC',
+              borderRadius: 12,
+              padding: '16rpx 24rpx',
+              fontSize: 36,
+              fontWeight: 600,
+              color: Number(meltTemp) >= 1175 ? '#10B981' : '#F59E0B',
+              border: `2rpx solid ${Number(meltTemp) >= 1175 ? 'transparent' : 'rgba(245,158,11,0.3)'}`
+            }}
+            placeholder="请输入熔化温度"
+          />
+          <View style={{ display: 'flex', marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+            {[1170, 1175, 1180, 1185, 1190].map((v) => (
+              <Text
+                key={v}
+                onClick={() => setMeltTemp(String(v))}
+                style={{
+                  padding: '8rpx 16rpx',
+                  borderRadius: 999,
+                  background: Number(meltTemp) === v ? 'linear-gradient(135deg,#DC2626,#F87171)' : '#F1F5F9',
+                  color: Number(meltTemp) === v ? '#fff' : '#475569',
+                  fontSize: 22,
+                  fontWeight: Number(meltTemp) === v ? 600 : 400
+                }}
+              >
+                {v}℃
+              </Text>
+            ))}
+          </View>
+        </View>
+        <View style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+          <Button
+            onClick={() => Taro.showToast({ title: '自动采集已启用', icon: 'none' })}
+            style={{
+              flex: 1,
+              height: 80,
+              borderRadius: 48,
+              background: '#F1F5F9',
+              color: '#475569',
+              fontSize: 26,
+              border: '1rpx solid #E2E8F0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            自动读取
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            style={{
+              flex: 2,
+              height: 80,
+              borderRadius: 48,
+              background: 'linear-gradient(135deg,#DC2626 0%,#F87171 100%)',
+              color: '#fff',
+              fontSize: 28,
+              fontWeight: 600,
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            提交温度记录
+          </Button>
+        </View>
+      </View>
 
-    <SectionHeader title="历史熔化记录" />
-    <RecordList records={recordList} />
+      <View className={styles.tempChartBox}>
+        <View className={styles.chartTitle}>
+          <Text>今日温度趋势</Text>
+          <Text style={{ fontSize: 22, color: '#94A3B8' }}>每小时记录</Text>
+        </View>
+        <View className={styles.tempBars}>
+          {temperatureTrend.map((item, idx) => {
+            const h = ((item.value - minTemp) / tempRange) * 100;
+            const safeH = Math.max(h, 10);
+            const variant = item.value >= 1182 ? '' : item.value >= 1178 ? 'mid' : 'low';
+            return (
+              <View className={styles.tempBar} key={idx}>
+                <Text className={styles.barValue}>{item.value}</Text>
+                <View
+                  className={`${styles.barFill} ${variant !== '' ? styles[variant] : ''}`}
+                  style={{ height: `${safeH}%` }}
+                ></View>
+                <Text className={styles.barLabel}>{item.time}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
 
-    <View style={{ height: 120 }}></View>
-    <View className={styles.fixedBottom}>
-      <Button className={styles.btnSecondary}>手动校准</Button>
-      <Button className={styles.btnPrimary} onClick={handleSubmit}>提交温度记录</Button>
-    </View>
-  </ScrollView>
+      <SectionHeader title={`历史熔化记录 (共${recordList.length}条)`} />
+      <RecordList records={recordList} />
+      <View style={{ height: 40 }}></View>
+    </ScrollView>
   );
 };
 

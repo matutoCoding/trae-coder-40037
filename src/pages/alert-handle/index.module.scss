@@ -1,0 +1,195 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.tabs {
+  background: $color-bg-card;
+  padding: $spacing-sm $page-padding;
+  display: flex;
+  gap: $spacing-md;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.tabItem {
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-bg-hover;
+  flex-shrink: 0;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.summaryBar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-md $page-padding;
+}
+
+.sumItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  text-align: center;
+
+  .v { font-size: $font-size-xl; font-weight: $font-weight-bold; color: $color-text-primary; }
+  .l { font-size: $font-size-xs; color: $color-text-tertiary; margin-top: 4rpx; }
+
+  &.pending .v { color: $color-warning; }
+  &.handled .v { color: $color-success; }
+  &.total .v { color: $color-primary; }
+}
+
+.alertList { padding: 0 $page-padding; }
+
+.alertCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+  border-left: 8rpx solid $color-warning;
+
+  &.error { border-left-color: $color-error; }
+  &.info { border-left-color: $color-info; }
+  &.handled { border-left-color: $color-status-standby; opacity: 0.85; }
+
+  .cardBody { padding: $spacing-lg; }
+
+  .cardHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-md;
+
+    .left { flex: 1; }
+
+    .title {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: 4rpx;
+    }
+
+    .module {
+      font-size: $font-size-xs;
+      color: $color-primary;
+      background: rgba(184,115,51,0.1);
+      display: inline-block;
+      padding: 4rpx 12rpx;
+      border-radius: $radius-xs;
+    }
+  }
+
+  .message {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    line-height: 1.6;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-hover;
+    border-radius: $radius-md;
+    margin-bottom: $spacing-md;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+
+  .handleSection {
+    padding-top: $spacing-md;
+    margin-top: $spacing-md;
+    border-top: 1rpx dashed $color-divider;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .inputBox {
+    background: $color-bg-hover;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+    min-height: 140rpx;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    line-height: 1.6;
+    border: 2rpx solid transparent;
+
+    &.focused {
+      border-color: $color-primary;
+      background: $color-bg-card;
+    }
+  }
+
+  .btnRow {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  .btn {
+    flex: 1;
+    height: 72rpx;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:active { opacity: 0.9; transform: scale(0.98); }
+  }
+
+  .btnPrimary {
+    background: linear-gradient(135deg, $color-success 0%, #34D399 100%);
+    color: $color-text-white;
+  }
+
+  .btnSecondary {
+    background: $color-bg-hover;
+    color: $color-text-secondary;
+    border: 1rpx solid $color-border;
+  }
+
+  .handledInfo {
+    padding: $spacing-md;
+    background: rgba(16,185,129,0.08);
+    border-radius: $radius-md;
+    border: 1rpx solid rgba(16,185,129,0.2);
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: $font-size-xs;
+      line-height: 2;
+
+      .k { color: $color-text-tertiary; }
+      .v { color: $color-text-primary; font-weight: $font-weight-medium; }
+    }
+
+    .measure {
+      margin-top: $spacing-sm;
+      padding-top: $spacing-sm;
+      border-top: 1rpx dashed rgba(16,185,129,0.2);
+      font-size: $font-size-sm;
+      color: $color-success;
+      line-height: 1.6;
+    }
+  }
+}

@@ -1,0 +1,267 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.searchArea {
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-lg $page-padding $spacing-xl;
+  position: relative;
+
+  .title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-white;
+    margin-bottom: $spacing-xs;
+  }
+
+  .sub {
+    font-size: $font-size-sm;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.searchBox {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+  display: flex;
+  gap: $spacing-sm;
+
+  .inputWrap {
+    flex: 1;
+    background: $color-bg-hover;
+    border-radius: $radius-md;
+    padding: 0 $spacing-md;
+    display: flex;
+    align-items: center;
+
+    .icon { font-size: $font-size-lg; color: $color-text-tertiary; margin-right: $spacing-sm; }
+    .input {
+      flex: 1;
+      height: 80rpx;
+      font-size: $font-size-md;
+      color: $color-text-primary;
+      line-height: 80rpx;
+    }
+  }
+
+  .searchBtn {
+    width: 160rpx;
+    height: 80rpx;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:active { opacity: 0.9; }
+  }
+}
+
+.batchList {
+  margin: -40rpx $page-padding $spacing-md;
+  position: relative;
+  z-index: 10;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-md;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+
+  .tag {
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-hover;
+    border-radius: $radius-round;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+
+    &.active {
+      background: linear-gradient(135deg, rgba(184,115,51,0.15) 0%, rgba(184,115,51,0.1) 100%);
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+      border: 1rpx solid rgba(184,115,51,0.3);
+    }
+  }
+
+  .labelTag {
+    padding: $spacing-sm 0;
+    padding-right: $spacing-sm;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    align-self: center;
+  }
+}
+
+.traceTimeline {
+  margin: 0 $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.traceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-md;
+
+  .batchTitle {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+  }
+
+  .overallStatus {
+    padding: $spacing-sm $spacing-md;
+    border-radius: $radius-round;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    background: rgba(16,185,129,0.1);
+    color: $color-success;
+  }
+}
+
+.timelineNode {
+  position: relative;
+  padding-left: 100rpx;
+  padding-bottom: $spacing-lg;
+
+  &:last-child {
+    padding-bottom: 0;
+
+    .line { display: none; }
+  }
+
+  .nodeMarker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: $radius-md;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-text-white;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    z-index: 2;
+
+    &.done { background: linear-gradient(135deg, #10B981 0%, #34D399 100%); }
+    &.warn { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); }
+    &.pending { background: linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%); }
+  }
+
+  .line {
+    position: absolute;
+    left: 35rpx;
+    top: 80rpx;
+    bottom: 0;
+    width: 4rpx;
+    background: $color-divider;
+  }
+
+  .nodeContent {
+    background: $color-bg-hover;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+
+    .nodeHead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-sm;
+
+      .nodeName {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+      }
+    }
+
+    .nodeInfo {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-bottom: $spacing-sm;
+      display: flex;
+      gap: $spacing-md;
+    }
+
+    .params {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: $spacing-xs $spacing-md;
+      padding-top: $spacing-sm;
+      border-top: 1rpx dashed $color-border;
+
+      .pItem {
+        font-size: $font-size-xs;
+        line-height: 1.6;
+
+        .pLabel { color: $color-text-tertiary; margin-right: 4rpx; }
+        .pValue { color: $color-text-primary; font-weight: $font-weight-medium; }
+      }
+    }
+  }
+}
+
+.summaryCard {
+  margin: 0 $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .title {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-md;
+  }
+
+  .sumRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+
+    .item {
+      text-align: center;
+      background: $color-bg-hover;
+      border-radius: $radius-md;
+      padding: $spacing-md;
+
+      .v { font-size: 32rpx; font-weight: $font-weight-bold; color: $color-primary; }
+      .l { font-size: $font-size-xs; color: $color-text-tertiary; margin-top: 4rpx; }
+    }
+  }
+}
+
+.empty {
+  margin: 80rpx $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 80rpx $spacing-lg;
+  text-align: center;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+  box-shadow: $shadow-card;
+
+  .emptyIcon { font-size: 80rpx; margin-bottom: $spacing-md; display: block; }
+  .emptyTip { font-size: $font-size-sm; margin-top: $spacing-sm; color: $color-text-tertiary; line-height: 1.8; }
+}

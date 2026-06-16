@@ -1,25 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import styles from './index.module.scss';
+import classnames from 'classnames';
 import StatCard from '@/components/StatCard';
 import ModuleCard from '@/components/ModuleCard';
 import SimpleChart from '@/components/SimpleChart';
-import {
-  moduleStatusList,
-  productionStatsList,
-  currentUser,
-  dailyOutputChart,
-  shiftNameMap
-} from '@/data/mockData';
+import { useProductionStore } from '@/store/production';
+import { currentUser, shiftNameMap } from '@/data/mockData';
 
 const HomePage: React.FC = () => {
   const [currentTime, setCurrentTime] = useState('');
 
+  const moduleStatus = useProductionStore((s) => s.moduleStatus);
+  const records = useProductionStore((s) => s.records);
+  const alerts = useProductionStore((s) => s.alerts);
+  const getReportsByDateRange = useProductionStore((s) => s.getReportsByDateRange);
+
   useEffect(() => {
-    const now = new Date();
-    const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    setCurrentTime(dateStr);
+    const updateTime = () => {
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setCurrentTime(dateStr);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 60000);
+    return () => clearInterval(timer);
   }, []);
 
   useDidShow(() => {
@@ -34,22 +40,67 @@ const HomePage: React.FC = () => {
     }, 800);
   });
 
-  const todayStats = productionStatsList.find(
-    (s) => s.date === '2026-06-17' && s.shift === currentUser.currentShift
-  ) || productionStatsList[0];
+  const today = new Date().toISOString().slice(0, 10);
+  const report7d = useMemo(() => getReportsByDateRange('7d'), [getReportsByDateRange]);
+
+  const todayFeed = useMemo(
+    () => records.feeding.filter((r) => r.createTime.startsWith(today)).reduce((s, r) => s + r.cathodeCopperWeight, 0),
+    [records.feeding, today]
+  );
+  const todayFinished = useMemo(
+    () => records.pickling.filter((r) => r.createTime.startsWith(today)).reduce((s, r) => s + r.coilWeight, 0),
+    [records.pickling, today]
+  );
+  const todayInspections = useMemo(
+    () => records.inspection.filter((r) => r.createTime.startsWith(today)),
+    [records.inspection, today]
+  );
+  const todayPassRate = useMemo(() => {
+    if (todayInspections.length === 0) return 98.5;
+    const pass = todayInspections.filter((r) => r.overallResult === 'pass').length;
+    return Number(((pass / todayInspections.length) * 100).toFixed(1));
+  }, [todayInspections]);
+
+  const todayRunningHours = useMemo(() => {
+    const h = report7d.stats.filter((s) => s.date.startsWith(today)).reduce((s, r) => s + r.runningHours, 0);
+    return h > 0 ? Number(h.toFixed(1)) : 6.5;
+  }, [report7d.stats, today]);
+
+  const pendingAlertCount = alerts.filter((a) => !a.isHandled).length;
+  const handledAlertCount = alerts.filter((a) => a.isHandled).length;
 
   const handleQuickAction = (action: string) => {
-    console.log('[HomePage] 快捷操作:', action);
     const pageMap: Record<string, string> = {
       feeding: '/pages/feeding-detail/index',
       melting: '/pages/melting-detail/index',
+      furnace: '/pages/furnace-detail/index',
+      casting: '/pages/casting-detail/index',
       rolling: '/pages/rolling-detail/index',
-      inspection: '/pages/inspection-detail/index'
+      pickling: '/pages/pickling-detail/index',
+      inspection: '/pages/inspection-detail/index',
+      trace: '/pages/batch-trace/index',
+      alert: '/pages/alert-handle/index'
     };
     const path = pageMap[action];
     if (path) {
       Taro.navigateTo({ url: path });
     }
+  };
+
+  const handleAlertClick = (alertId: string) => {
+    Taro.navigateTo({ url: `/pages/alert-handle/index?alertId=${alertId}` });
+  };
+
+  const getAlertIconStyle = (type: string) => {
+    if (type === 'error') return styles.error;
+    if (type === 'info') return styles.info;
+    return '';
+  };
+
+  const getAlertIcon = (type: string) => {
+    if (type === 'error') return '✕';
+    if (type === 'info') return 'i';
+    return '!';
   };
 
   return (
@@ -65,44 +116,51 @@ const HomePage: React.FC = () => {
             {shiftNameMap[currentUser.currentShift]}值班
           </View>
         </View>
+        {pendingAlertCount > 0 && (
+          <View className={styles.alertBanner} onClick={() => handleQuickAction('alert')}>
+            <View className={styles.alertDot}></View>
+            <Text className={styles.alertBannerText}>当前有 {pendingAlertCount} 条待处理预警，点击处理</Text>
+            <Text className={styles.alertArrow}>→</Text>
+          </View>
+        )}
       </View>
 
       <View className={styles.statsGrid}>
         <StatCard
           icon="⚙"
           label="今日投料"
-          value={((todayStats.feedingWeight || 0) / 1000).toFixed(1)}
+          value={(todayFeed / 1000).toFixed(1)}
           unit="吨"
           color="copper"
-          subInfo="目标12.5吨"
+          subInfo={`已录入 ${records.feeding.filter((r) => r.createTime.startsWith(today)).length} 批`}
           trend="up"
           trendValue="3.2%"
         />
         <StatCard
           icon="🔥"
           label="成品产量"
-          value={((todayStats.finishedWeight || 0) / 1000).toFixed(1)}
+          value={(todayFinished / 1000).toFixed(1)}
           unit="吨"
           color="orange"
-          subInfo="较昨日"
+          subInfo={`已成圈 ${records.pickling.filter((r) => r.createTime.startsWith(today)).length} 卷`}
           trend="up"
           trendValue="5.6%"
         />
         <StatCard
           icon="✅"
           label="合格率"
-          value={todayStats.passRate || 0}
+          value={todayPassRate}
           unit="%"
           color="green"
-          subInfo="目标 ≥ 98%"
+          subInfo={`检验 ${todayInspections.length} 批`}
         />
         <StatCard
           icon="⏱"
           label="运行时长"
-          value={todayStats.runningHours || 0}
+          value={todayRunningHours}
           unit="小时"
           color="blue"
-          subInfo="当班累计"
+          subInfo={`${moduleStatus.filter((m) => m.status === 'running').length}/${moduleStatus.length} 运行`}
         />
       </View>
 
@@ -130,6 +188,19 @@ const HomePage: React.FC = () => {
             <View className={`${styles.actionIcon} ${styles.c4}`}>检</View>
             <Text className={styles.actionLabel}>成品检验</Text>
           </View>
+          <View className={styles.actionItem} onClick={() => handleQuickAction('trace')}>
+            <View className={`${styles.actionIcon} ${styles.c5}`}>溯</View>
+            <Text className={styles.actionLabel}>批次追踪</Text>
+          </View>
+          <View className={styles.actionItem} onClick={() => handleQuickAction('alert')}>
+            <View className={`${styles.actionIcon} ${styles.c6}`}>
+              处
+              {pendingAlertCount > 0 && (
+                <View className={styles.badgeMini}>{pendingAlertCount}</View>
+              )}
+            </View>
+            <Text className={styles.actionLabel}>异常处理</Text>
+          </View>
         </View>
 
         <View className={styles.sectionHeader}>
@@ -145,7 +216,7 @@ const HomePage: React.FC = () => {
           </Text>
         </View>
 
-        {moduleStatusList.slice(0, 4).map((module) => (
+        {moduleStatus.slice(0, 4).map((module) => (
           <ModuleCard key={module.key} data={module} />
         ))}
 
@@ -158,7 +229,7 @@ const HomePage: React.FC = () => {
         <SimpleChart
           title="近7日产量趋势"
           unit="吨"
-          data={dailyOutputChart}
+          data={report7d.outputChart}
           type="bar"
           color="copper"
         />
@@ -166,31 +237,53 @@ const HomePage: React.FC = () => {
         <View className={styles.sectionHeader}>
           <View className={styles.title}>
             <View className={styles.bar}></View>
-            <Text>预警提示</Text>
+            <Text>预警提示 ({pendingAlertCount}待处理 / {handledAlertCount}已处理)</Text>
           </View>
+          <Text
+            className={styles.more}
+            onClick={() => handleQuickAction('alert')}
+          >
+            管理 →
+          </Text>
         </View>
         <View className={styles.alertList}>
-          <View className={styles.alertItem}>
-            <View className={styles.alertIcon}>!</View>
-            <View className={styles.alertContent}>
-              <Text className={styles.title}>1#保温炉液位偏低</Text>
-              <Text className={styles.time}>当前液位 72%，建议及时补铜液</Text>
+          {alerts.length === 0 ? (
+            <View className={styles.emptyAlert}>
+              <Text>暂无预警信息</Text>
             </View>
-          </View>
-          <View className={styles.alertItem}>
-            <View className={`${styles.alertIcon} ${styles.info}`}>i</View>
-            <View className={styles.alertContent}>
-              <Text className={styles.title}>B2026061704批次待检</Text>
-              <Text className={styles.time}>已等待15分钟，请及时安排检验</Text>
-            </View>
-          </View>
-          <View className={styles.alertItem}>
-            <View className={`${styles.alertIcon} ${styles.error}`}>✕</View>
-            <View className={styles.alertContent}>
-              <Text className={styles.title}>酸液浓度接近下限</Text>
-              <Text className={styles.time}>当前浓度12.3%，建议补充酸液</Text>
-            </View>
-          </View>
+          ) : (
+            alerts.map((alert) => (
+              <View
+                key={alert.id}
+                className={classnames(styles.alertItem, alert.isHandled && styles.handled)}
+                onClick={() => handleAlertClick(alert.id)}
+              >
+                <View className={classnames(styles.alertIcon, getAlertIconStyle(alert.type))}>
+                  {getAlertIcon(alert.type)}
+                </View>
+                <View className={styles.alertContent}>
+                  <View className={styles.alertTitleRow}>
+                    <Text className={styles.title}>{alert.title}</Text>
+                    {alert.isHandled && (
+                      <View className={styles.handledTag}>
+                        <Text>已处理</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className={styles.time}>{alert.message}</Text>
+                  <View className={styles.metaRow}>
+                    <Text className={styles.metaText}>{alert.createTime.slice(5)}</Text>
+                    {alert.isHandled && (
+                      <Text className={styles.metaText}>
+                        · {alert.handler}处理于 {alert.handleTime?.slice(11, 16)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <View className={styles.arrow}>›</View>
+              </View>
+            ))
+          )}
         </View>
       </View>
     </ScrollView>

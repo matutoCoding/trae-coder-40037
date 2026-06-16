@@ -10,7 +10,9 @@ export default defineAppConfig({
     'pages/casting-detail/index',
     'pages/rolling-detail/index',
     'pages/pickling-detail/index',
-    'pages/inspection-detail/index'
+    'pages/inspection-detail/index',
+    'pages/batch-trace/index',
+    'pages/alert-handle/index'
   ],
   window: {
     backgroundTextStyle: 'light',

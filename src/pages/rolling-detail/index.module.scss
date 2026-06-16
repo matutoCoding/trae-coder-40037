@@ -192,3 +192,57 @@
   border: 1rpx solid $color-border; display: flex; align-items: center; justify-content: center;
   &:active { opacity: 0.9; transform: scale(0.98); }
 }
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.inputValue {
+  flex: 1;
+  min-width: 200rpx;
+  height: 64rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-hover;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  text-align: right;
+}
+
+.inputUnit {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  min-width: 80rpx;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0 $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.chipRowNoPad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.chip {
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-hover;
+  border: 1rpx solid $color-border;
+  border-radius: 32rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  &Active {
+    background: rgba($color-primary, 0.12);
+    border-color: $color-primary;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
